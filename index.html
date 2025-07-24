@@ -95,8 +95,8 @@
         function loadDeliveryData() {
             showStatus('Loading delivery data...', true);
 
-            // FIX: Use a CORS proxy to bypass browser security that causes a "NetworkError".
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(GOOGLE_SHEET_CSV_URL)}`;
+            // FIX: Switched to a different CORS proxy to resolve the "Failed to fetch" error on deployed sites.
+            const proxyUrl = `https://thingproxy.freeboard.io/fetch/${GOOGLE_SHEET_CSV_URL}`;
 
             fetch(proxyUrl, { cache: 'no-cache' })
                 .then(response => {
