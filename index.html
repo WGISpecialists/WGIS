@@ -92,10 +92,11 @@
 
                 // The data is already in a clean format, just map it to our internal variable.
                 deliveryData = data.map(item => ({
-                    // Look for lowercase headers provided by the updated Apps Script.
-                    postcode: item.postcode,
-                    suburb: item.suburb,
-                    day: item['delivery days']
+                    // FIX: Make the code more robust by checking for multiple capitalizations.
+                    // This handles potential inconsistencies from the Google Apps Script.
+                    postcode: item.postcode || item.Postcode,
+                    suburb: item.suburb || item.Suburb,
+                    day: item['delivery days'] || item['DELIVERY DAYS']
                 })).filter(item => item.suburb); // Ensure there's at least a suburb
 
                 resultsDiv.innerHTML = '<p class="text-gray-500">Data loaded successfully. Ready to search.</p>';
