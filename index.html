@@ -33,13 +33,13 @@
 
     <div class="container mx-auto max-w-2xl p-4 sm:p-8">
         <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Delivery Schedule</h1>
-            <p class="mt-2 text-lg text-gray-600">Enter your suburb to find your delivery day.</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Whitegoods Installation Specialists Delivery Suburb Checker</h1>
+            <p class="mt-2 text-lg text-gray-600">Enter the suburb to find the delivery day.</p>
         </header>
 
         <main>
             <div class="relative">
-                <input type="text" id="searchInput" placeholder="e.g., Park Ridge" class="w-full px-4 py-3 pr-10 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
+                <input type="text" id="searchInput" placeholder="e.g., Brisbane" class="w-full px-4 py-3 pr-10 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
                 <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
@@ -51,13 +51,14 @@
         </main>
 
         <footer class="text-center mt-12">
-            <p class="text-sm text-gray-400">&copy; 2024 Your Company Name. All rights reserved.</p>
+            <p class="text-sm text-gray-400">&copy; 2024 Whitegoods Installation Specialists Pty Ltd. All rights reserved.</p>
         </footer>
     </div>
 
     <script>
         // --- CONFIGURATION ---
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQA2D3lTZvxsXif1-ROoLjd-n1AitmULbUpCGlY1o3v9NkXi1M5FeqJrU9mbKsFWS5nWvz4ODydket6/pub?gid=0&single=true&output=csv';
+        // This is the URL from deploying the Google Apps Script as a Web App.
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJ6LUIx253pHggrA8CY836nsVB1vW-uWeKpuW5zQ-PIp1gqAkt0y9AByZ1Hxufxhs3/exec';
 
         // --- DOM ELEMENTS ---
         const searchInput = document.getElementById('searchInput');
@@ -65,87 +66,43 @@
         let deliveryData = [];
 
         // --- FUNCTIONS ---
-
-        /**
-         * Updates the UI to show a detailed error message for debugging.
-         * @param {string} message The primary error message.
-         * @param {string} [details=''] Optional details or the error object.
-         */
-        function displayError(message, details = '') {
-            console.error(message, details);
-            resultsDiv.innerHTML = `<div class="text-left"><p class="text-red-600 font-semibold">${message}</p><p class="text-sm text-gray-500 mt-2">${details}</p></div>`;
-        }
-
-        /**
-         * Updates the UI with a status message (loading, success, etc.).
-         * @param {string} message The message to display.
-         * @param {boolean} [isLoader=false] Whether to show the loading spinner.
-         */
-        function showStatus(message, isLoader = false) {
-            if (isLoader) {
-                resultsDiv.innerHTML = '<div class="loader"></div>';
-            } else {
-                resultsDiv.innerHTML = `<p class="text-gray-500">${message}</p>`;
-            }
-        }
         
         /**
-         * Main function to load and process the delivery data.
+         * Main function to load and process the delivery data via Google Apps Script.
          */
-        function loadDeliveryData() {
-            showStatus('Loading delivery data...', true);
+        async function loadDeliveryData() {
+            resultsDiv.innerHTML = '<div class="loader"></div>';
 
-            // FIX: Use a CORS proxy to bypass browser security that causes a "NetworkError".
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(GOOGLE_SHEET_CSV_URL)}`;
+            if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                resultsDiv.innerHTML = `<p class="text-red-600 font-semibold">Configuration Error: Please add your Google Apps Script URL to the code.</p>`;
+                return;
+            }
 
-            fetch(proxyUrl, { cache: 'no-cache' })
-                .then(response => {
-                    // Step 1: Check if the network request itself was successful.
-                    if (!response.ok) {
-                        throw new Error(`Network request failed. Status: ${response.status} ${response.statusText}`);
-                    }
-                    return response.text();
-                })
-                .then(csvText => {
-                    // Step 2: Check if the fetched data is empty.
-                    if (!csvText || csvText.trim() === '') {
-                        throw new Error('The Google Sheet appears to be empty or could not be read.');
-                    }
-                    
-                    // Step 3: Parse the CSV data.
-                    try {
-                        const lines = csvText.replace(/\r/g, '').split('\n');
-                        const dataRows = lines.slice(1); // Remove header row
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                if (!response.ok) {
+                    throw new Error(`Network request failed. Status: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json(); // Data is now JSON, not CSV
 
-                        deliveryData = dataRows
-                            .map(row => {
-                                const columns = row.split(',');
-                                // Expecting: Postcode, Suburb, Delivery Days
-                                if (columns.length >= 3 && columns[1] && columns[1].trim() !== '') {
-                                    return {
-                                        postcode: columns[0].trim(),
-                                        suburb: columns[1].trim(),
-                                        day: columns[2].trim()
-                                    };
-                                }
-                                return null;
-                            })
-                            .filter(item => item !== null); // Remove any empty or invalid rows
+                if (!data || data.length === 0) {
+                    resultsDiv.innerHTML = `<p class="text-orange-500 font-medium">Data loaded, but the sheet appears to be empty.</p>`;
+                    return;
+                }
 
-                        if (deliveryData.length === 0) {
-                            showStatus('Data loaded, but no valid delivery entries were found. Please check the column format in your Google Sheet.');
-                        } else {
-                            showStatus('Data loaded successfully. Ready to search.');
-                        }
-                    } catch (parseError) {
-                        // This will catch errors during the data processing.
-                        throw new Error(`The data from the sheet could not be processed. Error: ${parseError.message}`);
-                    }
-                })
-                .catch(error => {
-                    // This single catch block handles any failure from the chain above.
-                    displayError('An error occurred while loading data:', error.message);
-                });
+                // The data is already in a clean format, just map it to our internal variable.
+                deliveryData = data.map(item => ({
+                    postcode: item.Postcode,
+                    suburb: item.Suburb,
+                    day: item['Delivery Days']
+                })).filter(item => item.suburb); // Ensure there's at least a suburb
+
+                resultsDiv.innerHTML = '<p class="text-gray-500">Data loaded successfully. Ready to search.</p>';
+
+            } catch (error) {
+                console.error('Error fetching or parsing data:', error);
+                resultsDiv.innerHTML = `<p class="text-red-500 font-medium">Could not load delivery data. Error: ${error.message}</p>`;
+            }
         }
 
         /**
@@ -162,7 +119,7 @@
             }
 
             const foundSuburbs = deliveryData.filter(item => 
-                item.suburb.toLowerCase().includes(searchTerm)
+                item.suburb && item.suburb.toLowerCase().includes(searchTerm)
             );
 
             if (foundSuburbs.length > 0) {
