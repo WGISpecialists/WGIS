@@ -120,8 +120,8 @@
 
             const foundSuburbs = deliveryData.filter(item => {
                 const suburbMatch = item.suburb && item.suburb.toLowerCase().includes(searchTerm);
-                // Convert postcode to string to safely use .includes()
-                const postcodeMatch = item.postcode && String(item.postcode).toLowerCase().includes(searchTerm);
+                // More robust postcode search to handle numbers or text correctly.
+                const postcodeMatch = item.postcode && item.postcode.toString().toLowerCase().includes(searchTerm);
                 return suburbMatch || postcodeMatch;
             });
 
