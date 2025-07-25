@@ -92,10 +92,10 @@
 
                 // The data is already in a clean format, just map it to our internal variable.
                 deliveryData = data.map(item => ({
-                    postcode: item.Postcode,
-                    suburb: item.Suburb,
-                    // FIX: Changed 'Delivery Days' to 'DELIVERY DAYS' to match the exact header in the Google Sheet.
-                    day: item['DELIVERY DAYS']
+                    // Look for lowercase headers provided by the updated Apps Script.
+                    postcode: item.postcode,
+                    suburb: item.suburb,
+                    day: item['delivery days']
                 })).filter(item => item.suburb); // Ensure there's at least a suburb
 
                 resultsDiv.innerHTML = '<p class="text-gray-500">Data loaded successfully. Ready to search.</p>';
