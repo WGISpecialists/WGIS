@@ -39,14 +39,14 @@
 
         <main>
             <div class="relative">
-                <input type="text" id="searchInput" placeholder="e.g., Brisbane" class="w-full px-4 py-3 pr-10 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
+                <input type="text" id="searchInput" placeholder="e.g., Brisbane or 4000" class="w-full px-4 py-3 pr-10 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
                 <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
             </div>
 
             <div id="results" class="mt-6 bg-white p-6 rounded-lg shadow-md min-h-[100px] flex items-center justify-center">
-                <p class="text-gray-500">Enter a suburb above to see results.</p>
+                <p class="text-gray-500">Enter a suburb or postcode above to see results.</p>
             </div>
         </main>
 
@@ -114,13 +114,16 @@
             if (deliveryData.length === 0) return;
 
             if (searchTerm.length === 0) {
-                resultsDiv.innerHTML = '<p class="text-gray-500">Enter a suburb above to see results.</p>';
+                resultsDiv.innerHTML = '<p class="text-gray-500">Enter a suburb or postcode above to see results.</p>';
                 return;
             }
 
-            const foundSuburbs = deliveryData.filter(item => 
-                item.suburb && item.suburb.toLowerCase().includes(searchTerm)
-            );
+            const foundSuburbs = deliveryData.filter(item => {
+                const suburbMatch = item.suburb && item.suburb.toLowerCase().includes(searchTerm);
+                // Convert postcode to string to safely use .includes()
+                const postcodeMatch = item.postcode && String(item.postcode).toLowerCase().includes(searchTerm);
+                return suburbMatch || postcodeMatch;
+            });
 
             if (foundSuburbs.length > 0) {
                 const resultsHtml = foundSuburbs.map(item => `
